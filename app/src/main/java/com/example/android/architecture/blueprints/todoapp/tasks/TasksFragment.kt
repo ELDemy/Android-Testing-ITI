@@ -31,6 +31,7 @@ import androidx.navigation.fragment.navArgs
 import com.example.android.architecture.blueprints.todoapp.EventObserver
 import com.example.android.architecture.blueprints.todoapp.R
 import com.example.android.architecture.blueprints.todoapp.data.Task
+import com.example.android.architecture.blueprints.todoapp.data.source.DefaultTasksRepository
 import com.example.android.architecture.blueprints.todoapp.databinding.TasksFragBinding
 import com.example.android.architecture.blueprints.todoapp.util.setupRefreshLayout
 import com.example.android.architecture.blueprints.todoapp.util.setupSnackbar
@@ -42,8 +43,12 @@ import timber.log.Timber
  * Display a grid of [Task]s. User can choose to view all, active or completed tasks.
  */
 class TasksFragment : Fragment() {
-
-    private val viewModel by viewModels<TasksViewModel>()
+    
+    private val viewModel by viewModels<TasksViewModel> {
+        TasksViewModelFactory(
+            DefaultTasksRepository.getRepository(requireActivity().application)
+        )
+    }
 
     private val args: TasksFragmentArgs by navArgs()
 
@@ -68,14 +73,17 @@ class TasksFragment : Fragment() {
                 viewModel.clearCompletedTasks()
                 true
             }
+
             R.id.menu_filter -> {
                 showFilteringPopUpMenu()
                 true
             }
+
             R.id.menu_refresh -> {
                 viewModel.loadTasks(true)
                 true
             }
+
             else -> false
         }
 

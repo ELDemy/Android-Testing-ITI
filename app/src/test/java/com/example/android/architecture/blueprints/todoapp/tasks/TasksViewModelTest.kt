@@ -1,13 +1,19 @@
 package com.example.android.architecture.blueprints.todoapp.tasks
 
-import android.app.Application
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
-import androidx.test.core.app.ApplicationProvider
+import androidx.lifecycle.MutableLiveData
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.example.android.architecture.blueprints.todoapp.R
+import com.example.android.architecture.blueprints.todoapp.data.Result
+import com.example.android.architecture.blueprints.todoapp.data.Task
+import com.example.android.architecture.blueprints.todoapp.data.source.DefaultTasksRepository
 import com.example.android.architecture.blueprints.todoapp.getOrAwaitValue
+import io.mockk.coEvery
+import io.mockk.every
+import io.mockk.mockk
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -15,15 +21,37 @@ import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 class TasksViewModelTest {
+
     @get:Rule
     var instantExecutorRule = InstantTaskExecutorRule()
 
+    lateinit var remoteTasks: MutableList<Task>
+    lateinit var localTasks: MutableList<Task>
+    lateinit var tasksViewModel: TasksViewModel
+
+    @Before
+    fun setup() {
+        remoteTasks = mutableListOf(
+            Task("Remote task 1", "Description 1"),
+            Task("Remote task 2", "Description 2")
+        )
+
+        localTasks = mutableListOf(
+            Task("Local task 1", "Description 1"),
+            Task("Local task 2", "Description 2")
+        )
+
+        //Given a view model
+        val repo: DefaultTasksRepository = mockk()
+
+        every { repo.observeTasks() } returns MutableLiveData()
+        coEvery { repo.getTasks() } returns Result.Success(localTasks)
+
+        tasksViewModel = TasksViewModel(repo)
+    }
+
     @Test
     fun addNewTask_updateNewTaskEvent() {
-        //Given a view model
-        val application: Application = ApplicationProvider.getApplicationContext()
-        val tasksViewModel = TasksViewModel(application)
-
         //when adding new task
         tasksViewModel.addNewTask()
 
@@ -35,10 +63,6 @@ class TasksViewModelTest {
 
     @Test
     fun setFilter_allTasks_UpdateLiveData() {
-        //Given a view model
-        val application: Application = ApplicationProvider.getApplicationContext()
-        val tasksViewModel = TasksViewModel(application)
-
         //when filtering with all tasks
         tasksViewModel.setFiltering(TasksFilterType.ALL_TASKS)
 
@@ -56,10 +80,6 @@ class TasksViewModelTest {
 
     @Test
     fun setFilter_activeTasks_updateLiveData() {
-        //Given a view model
-        val application: Application = ApplicationProvider.getApplicationContext()
-        val tasksViewModel = TasksViewModel(application)
-
         //when filtering with only active tasks
         tasksViewModel.setFiltering(TasksFilterType.ACTIVE_TASKS)
 
@@ -77,10 +97,6 @@ class TasksViewModelTest {
 
     @Test
     fun setFilter_completedTasks_updateLiveData() {
-        //Given a view model
-        val application: Application = ApplicationProvider.getApplicationContext()
-        val tasksViewModel = TasksViewModel(application)
-
         //when filtering with completed tasks
         tasksViewModel.setFiltering(TasksFilterType.COMPLETED_TASKS)
 

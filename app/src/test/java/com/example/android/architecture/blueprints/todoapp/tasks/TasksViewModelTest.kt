@@ -2,7 +2,6 @@ package com.example.android.architecture.blueprints.todoapp.tasks
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import androidx.lifecycle.MutableLiveData
-import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.example.android.architecture.blueprints.todoapp.R
 import com.example.android.architecture.blueprints.todoapp.data.Result
 import com.example.android.architecture.blueprints.todoapp.data.Task
@@ -10,16 +9,24 @@ import com.example.android.architecture.blueprints.todoapp.data.source.DefaultTa
 import com.example.android.architecture.blueprints.todoapp.getOrAwaitValue
 import io.mockk.coEvery
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
+import io.mockk.runs
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.setMain
+import org.hamcrest.CoreMatchers.`is`
+import org.hamcrest.MatcherAssert.assertThat
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
-import org.junit.runner.RunWith
 
-
-@RunWith(AndroidJUnit4::class)
+@OptIn(ExperimentalCoroutinesApi::class)
 class TasksViewModelTest {
 
     @get:Rule
@@ -27,10 +34,13 @@ class TasksViewModelTest {
 
     lateinit var remoteTasks: MutableList<Task>
     lateinit var localTasks: MutableList<Task>
+    lateinit var repo: DefaultTasksRepository
     lateinit var tasksViewModel: TasksViewModel
+
 
     @Before
     fun setup() {
+        Dispatchers.setMain(StandardTestDispatcher())
         remoteTasks = mutableListOf(
             Task("Remote task 1", "Description 1"),
             Task("Remote task 2", "Description 2")
@@ -42,12 +52,42 @@ class TasksViewModelTest {
         )
 
         //Given a view model
-        val repo: DefaultTasksRepository = mockk()
+        repo = mockk()
 
         every { repo.observeTasks() } returns MutableLiveData()
         coEvery { repo.getTasks() } returns Result.Success(localTasks)
 
         tasksViewModel = TasksViewModel(repo)
+    }
+
+
+    @Test
+    fun completeTask_dataSavedAndSnackBarShowMessage() = runTest {
+        //Given task
+        val task = Task("title", "desc")
+
+        coEvery { repo.completeTask(task) } just runs
+        //when marking as completed
+        tasksViewModel.completeTask(task, true)
+        
+        advanceUntilIdle()
+        //then task is completed and snackbar is shown
+        val snackbarText = tasksViewModel.snackbarText.getOrAwaitValue().getContentIfNotHandled()
+        assertThat(snackbarText, `is`(R.string.task_marked_complete))
+    }
+
+    @Test
+    fun inCompleteTask_dataSavedAndSnackBarShowMessage() {
+        //Given task
+        val task = Task("title", "desc")
+
+        coEvery { repo.activateTask(task) } just runs
+        //when marking as completed
+        tasksViewModel.completeTask(task, false)
+
+        //then task is completed and snackbar is shown
+        val snackBarText = tasksViewModel.snackbarText.getOrAwaitValue().getContentIfNotHandled()
+        assertThat(snackBarText, `is`(R.string.task_marked_active))
     }
 
     @Test

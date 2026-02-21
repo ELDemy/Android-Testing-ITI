@@ -81,8 +81,10 @@ dependencies {
     testImplementation "org.robolectric:robolectric:4.16"
 
     testImplementation "androidx.arch.core:core-testing:$archTestingVersion"
-
     testImplementation "org.jetbrains.kotlinx:kotlinx-coroutines-test:$coroutinesVersion"
     testImplementation "io.mockk:mockk:1.14.0"
+    
+    androidTestImplementation 'org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.0'
+    androidTestImplementation 'androidx.arch.core:core-testing:2.2.0'
 
 }

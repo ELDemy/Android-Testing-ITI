@@ -40,7 +40,7 @@ class TasksViewModelTest {
 
     @Before
     fun setup() {
-        Dispatchers.setMain(StandardTestDispatcher())
+
         remoteTasks = mutableListOf(
             Task("Remote task 1", "Description 1"),
             Task("Remote task 2", "Description 2")

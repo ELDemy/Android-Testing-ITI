@@ -51,7 +51,7 @@ class DefaultTasksRepositoryTest {
     fun getTasks_requestsAllTasksFromRemoteDataSource() = runTest {
         coEvery { tasksLocalDataSource.deleteAllTasks() } returns Unit
         coEvery { tasksLocalDataSource.saveTask(any()) } returns Unit
-        
+
         val tasks = tasksRepository.getTasks(true) as Result.Success
 //        assertThat(tasks is Result.Success, IsEqual(true))
         assertThat(tasks.data, IsEqual(localTasks))
